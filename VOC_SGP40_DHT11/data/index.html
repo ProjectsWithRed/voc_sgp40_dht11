@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="text/javascript" src="https://unpkg.com/github-api/dist/GitHub.bundle.min.js"></script>
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+
+    <script type="text/javascript" src="github_helper.js"></script>
+    <script type="text/javascript" src="chart.js"></script>
+
+    <style>
+        #container {
+            width: 100%;
+            height: 400px;
+        }
+
+        #et {
+            text-align: center;
+            font-family: sans-serif;
+        }
+    </style>
+
+</head>
+
+
+
+<body>
+    <h1 id="et">Elapsed time: 0:0:0</h1>
+    <div id="voc"></div>
+    <div id="sgp40"></div>
+    <div id="humidity"></div>
+    <div id="temperature"></div>
+</body>
+
+
+<script>
+
+var dataRate = 1000;  // Rate at which data is obtained from all the sensors in milliseconds.
+
+var save = true;      // Whether to save/backup sensor data to GitHub.
+var saveRate = 120;   // Rate at which all sensors data points are saved to GitHub in seconds.
+
+
+var startTime = new Date().getTime();
+var saveTime = new Date().getTime();  // Used to keep track of when to save the data.
+
+// Storing all sensor values for saving.
+var vocData = []
+var sgp40Data = [];
+var humidityData = [];
+var tempData = [];
+
+
+// GitHub setup.
+githubHelper = new GithubHelper({
+    username: "Your-GitHub-username",
+    password: "Your-GitHub-password",
+    token: "Your-GitHub-token",
+    repo: "Your-GitHub-repo"
+});
+
+
+// Creating all the charts.
+vocChart = new Chart({
+    type: "areaspline",
+    title: "VOC index",
+    yLabel: "VOC index",
+    legend: "VOC index",
+    color: "#386aff",
+    yMin: 0,                // Minimum value for the y axis, use -1 for automatic.
+    containerID: "voc",     // This needs to match the ID of the div in the <body> of where the chart is to be displayed.
+    httpURL: "/voc_index",  // Needs to match with what was set in the micro-controller.
+    dataArray: vocData
+});
+
+
+sgp40Chart = new Chart({
+    type: "spline",
+    title: "SGP40 raw resistance",
+    yLabel: "Resistance",
+    legend: "SGP40",
+    color: "#a629ff",
+    yMin: -1,
+    containerID: "sgp40",
+    httpURL: "/sgp40_raw",
+    dataArray: sgp40Data
+});
+
+humidityChart = new Chart({
+    type: "areaspline",
+    title: "Humidity",
+    yLabel: "Humidity (%)",
+    legend: "Humidity",
+    color: "#1fc7ff",
+    yMin: 0,
+    containerID: "humidity",
+    httpURL: "/humidity",
+    dataArray: humidityData
+});
+
+tempChart = new Chart({
+    type: "areaspline",
+    title: "Temperature",
+    yLabel: "Temperature (C)",
+    legend: "Temperature",
+    color: "#ff4d40",
+    yMin: -1,
+    containerID: "temperature",
+    httpURL: "/temp",
+    dataArray: tempData
+});
+
+
+setInterval(function() {
+
+    var currentTime = new Date().getTime();
+    updateElapsedTime(currentTime);
+
+    // Getting sensor data from the micro-controller and adding the data points to the charts.
+    vocChart.updateChart();
+    sgp40Chart.updateChart();
+    humidityChart.updateChart();
+    tempChart.updateChart();
+
+
+    // Saving to GitHub
+    elapsedSaveTime = currentTime - saveTime;
+    if(elapsedSaveTime >= (saveRate * 1000) && save) {
+
+        githubHelper.saveData({
+            filename: "VOC_SGP40_Humi_Temp_data.txt",
+            data: [vocData, sgp40Data, humidityData, tempData],
+        });
+
+        console.log("Saved to GitHub");
+        saveTime = currentTime;
+    }
+
+}, dataRate);
+
+
+
+// Used to convert milliseconds to hh:mm:ss format.
+function updateElapsedTime(currentTime) {
+    var time = currentTime - startTime;
+    var ms = time % 1000;
+    time = (time - ms) / 1000;
+    var secs = time % 60;
+    time = (time - secs) / 60;
+    var mins = time % 60;
+    var hrs = (time - mins) / 60;
+    var timeStr =  hrs + ":" + mins + ":" + secs;
+
+    document.getElementById("et").innerHTML = "Elapsed time: " + timeStr;
+}
+
+</script>
+
+
+</html>
