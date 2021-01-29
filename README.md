@@ -6,8 +6,7 @@ Measure the air quality (VOC) using the SGP40 and DHT11 sensors.
 
 There is a [video](https://youtu.be/iJIebUzhAIM) associated with this repo. Please watch the video, it explains how to use this repo and everything you need to know for the project.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/iJIebUzhAIM" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-
+[![Video](readme_imgs/vid_thumbnail.png)](https://youtu.be/iJIebUzhAIM "How to measure Air Quality in real-time! Easy and inexpensive (SGP40)")
 
 
 
